@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-noto-sans-jp), ui-sans-serif, system-ui, sans-serif;
+  --color-line: #06c755;
+  --color-line-dark: #05b34c;
+}
+
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+}
+
+@utility hide-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* フォーム共通 */
+@utility field {
+  @apply w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20;
+}
+
+@utility field-label {
+  @apply mb-1 block text-[11px] font-bold text-slate-500;
+}
+
+@utility card {
+  @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+}
