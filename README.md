@@ -45,6 +45,7 @@ npm run dev
 2. GCP で**サービスアカウント**を作成し、Sheets API / Drive API を有効化。スプレッドシートをサービスアカウントに「編集者」で共有
 3. **共有ドライブ**にフォルダを作り、サービスアカウントを「コンテンツ管理者」で追加 → フォルダ ID を `GOOGLE_DRIVE_FOLDER_ID` に設定
    （サービスアカウントはマイドライブに保存容量を持たないため共有ドライブが必須です）
+   - サービスアカウントは組織外のアカウント扱いです。追加できない場合は、Workspace 管理コンソールの「共有ドライブの設定」で組織外メンバーの追加を許可するか、対象の共有ドライブだけ許可してください
 4. `DATA_SOURCE=sheets` と `ADMIN_PASSWORD` を設定してデプロイ
    - シート (`drivers`, `vehicles`, `daily_reports`, `documents`, `defect_reports`, `alert_logs`) とヘッダー行は初回アクセス時に自動作成されます
 5. `GEMINI_API_KEY` を設定（未設定時は OCR がデモ値を返します）
