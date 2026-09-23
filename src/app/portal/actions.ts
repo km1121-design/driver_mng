@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { fail, isYmd, str, type ActionResult } from "@/lib/action-result";
+import { APP_BASE_URL } from "@/lib/config";
 import { resolvePortal } from "@/lib/data";
+import { notifyAdmin } from "@/lib/line";
 import { getRepo, newId } from "@/lib/repo";
 import { saveFile } from "@/lib/storage";
 import type { DocType } from "@/lib/types";
@@ -62,6 +64,18 @@ export async function submitDailyReport(_prev: ActionResult, form: FormData): Pr
       current_mileage: mileage,
       ...(oil ? { last_oil_mileage: mileage } : {}),
     });
+    const tireOk = form.get("tire_ok") === "on";
+    const lightsOk = form.get("lights_brakes_ok") === "on";
+    if (!tireOk || !lightsOk) {
+      const ng = [!tireOk && "タイヤ", !lightsOk && "ランプ類・ブレーキ"].filter(Boolean).join("・");
+      await notifyAdmin(
+        `【要確認】状態チェックで異常の報告がありました
+${driver.name} さん / ${vehicle.plate}
+項目: ${ng}
+${mileage.toLocaleString("ja-JP")} km
+${APP_BASE_URL}/`,
+      );
+    }
     revalidatePath("/", "layout");
     return { ok: true, message: "定期報告を送信しました。ありがとうございます！" };
   } catch (e) {
@@ -176,6 +190,11 @@ export async function submitDefect(_prev: ActionResult, form: FormData): Promise
       photo_urls: urls.join("\n"),
       status: "open",
     });
+    await notifyAdmin(
+      `【車両報告】${driver.name} さん / ${vehicle?.plate ?? "車両不明"}
+箇所: ${location}${urls.length ? `\n写真: ${urls.length}枚` : ""}
+${APP_BASE_URL}/defects`,
+    );
     revalidatePath("/", "layout");
     return { ok: true, message: "管理者に報告を送信しました" };
   } catch (e) {

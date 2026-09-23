@@ -51,6 +51,17 @@ npm run dev
 6. LINE 公式アカウント (Messaging API) を作成し、`LINE_CHANNEL_ACCESS_TOKEN` を設定
 7. `gas/notify.gs` をスプレッドシートの Apps Script に貼り付け、冒頭コメントの手順でトリガーと Webhook を設定
 
+### Cloud Run へのデプロイ
+
+```bash
+gcloud run deploy fleet-manager \
+  --source . --region asia-northeast1 --allow-unauthenticated \
+  --set-env-vars DATA_SOURCE=sheets,APP_BASE_URL=https://<発行されたURL>,... \
+  --set-secrets ADMIN_PASSWORD=admin-password:latest,GOOGLE_PRIVATE_KEY=google-private-key:latest,GEMINI_API_KEY=gemini-api-key:latest,LINE_CHANNEL_ACCESS_TOKEN=line-token:latest
+```
+
+秘密情報は Secret Manager に登録して `--set-secrets` で渡してください。ランニングコストの試算は [docs/cost.md](docs/cost.md) にあります。
+
 ## シート定義
 
 指示書の定義に、運用上必要な列を追加しています（★が追加分）。

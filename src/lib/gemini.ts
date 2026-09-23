@@ -83,6 +83,8 @@ details には ${spec.detailKeys.join(", ")} を読み取れた範囲で入れ�
         ],
         generationConfig: {
           temperature: 0,
+          // 期限の読み取りに推論は不要。思考トークン (出力単価で課金) を止めてコストと待ち時間を抑える
+          ...(model.startsWith("gemini-2.5-flash") ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
           responseMimeType: "application/json",
           responseSchema: {
             type: "OBJECT",

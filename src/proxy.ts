@@ -25,5 +25,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!portal|api/ocr|api/mock-files|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!portal|api/ocr|api/mock-files|_next/static|_next/image|favicon.ico|robots.txt).*)"],
 };

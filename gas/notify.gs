@@ -99,16 +99,28 @@ function dailyNotify() {
     return baseUrl + "/portal?id=" + encodeURIComponent(driver.portal_token) + path;
   }
 
-  var sent = 0;
+  // 同じドライバーへの通知は1日1通にまとめる (LINE の月間送信数 = 料金を抑えるため)
+  var queue = {};
   function notify(driver, kind, body, path) {
     if (!driver || !driver.line_user_id) return;
-    var text =
-      driver.name + " さん\n管理者です。\n\n" + body +
-      "\n\n▼【" + driver.name + "さん専用】提出フォーム\n" + url(driver, path) +
-      "\n\n※このURLはご本人専用です。他の方と共有しないでください。";
-    pushLine_(driver.line_user_id, text);
-    appendLog_(driver.id, kind);
-    sent++;
+    var q = queue[driver.id] || (queue[driver.id] = { driver: driver, items: [] });
+    q.items.push({ kind: kind, body: body, path: path });
+  }
+  function flush() {
+    var sent = 0;
+    Object.keys(queue).forEach(function (id) {
+      var q = queue[id];
+      var d = q.driver;
+      var bodies = q.items.map(function (it) { return q.items.length > 1 ? "■ " + it.body : it.body; });
+      var text =
+        d.name + " さん\n管理者です。\n\n" + bodies.join("\n\n") +
+        "\n\n▼【" + d.name + "さん専用】提出フォーム\n" + url(d, q.items[0].path) +
+        "\n\n※このURLはご本人専用です。他の方と共有しないでください。";
+      pushLine_(d.line_user_id, text);
+      q.items.forEach(function (it) { appendLog_(d.id, it.kind); });
+      sent++;
+    });
+    return sent;
   }
 
   drivers.forEach(function (d) {
@@ -160,7 +172,7 @@ function dailyNotify() {
     }
   });
 
-  console.log("dailyNotify: sent=" + sent);
+  console.log("dailyNotify: sent=" + flush() + " messages");
 }
 
 function pushLine_(to, text) {
