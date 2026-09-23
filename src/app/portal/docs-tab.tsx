@@ -71,7 +71,7 @@ export function DocsTab({
       <button type="button" onClick={back} className="mb-4 flex items-center gap-1 py-1 text-sm font-bold text-slate-500">
         <ArrowLeft className="size-4" /> 戻る
       </button>
-      {group === "license" && <LicenseForm token={token} onDone={back} />}
+      {group === "license" && <LicenseForm token={token} driver={driver} onDone={back} />}
       {group === "vehicle" && <VehicleDocsForm token={token} onDone={back} />}
       {group === "contact" && <ContactForm token={token} driver={driver} onDone={back} />}
     </div>
@@ -102,7 +102,12 @@ type Ocr = { status: "idle" | "busy" | "done" | "error"; warning?: string; detai
 function useOcr(token: string) {
   const [ocr, setOcr] = useState<Record<string, Ocr>>({});
   const toast = useToast();
-  async function run(docType: DocType, file: File, onExpiry: (d: string) => void) {
+  async function run(
+    docType: DocType,
+    file: File,
+    onExpiry: (d: string) => void,
+    onDetails?: (details: Record<string, string>) => void,
+  ) {
     setOcr((o) => ({ ...o, [docType]: { status: "busy" } }));
     const fd = new FormData();
     fd.set("token", token);
@@ -113,6 +118,7 @@ function useOcr(token: string) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "読み取りに失敗しました");
       if (json.expiry_date) onExpiry(json.expiry_date);
+      if (json.details) onDetails?.(json.details);
       setOcr((o) => ({ ...o, [docType]: { status: "done", warning: json.warning, details: json.details } }));
       if (json.expiry_date) toast("AIの読み取りが完了しました。日付をご確認ください", "success");
     } catch (e) {
@@ -122,7 +128,7 @@ function useOcr(token: string) {
   return { ocr, run };
 }
 
-function OcrStatus({ state }: { state?: Ocr }) {
+function OcrStatus({ state, hideDetails = false }: { state?: Ocr; hideDetails?: boolean }) {
   if (!state || state.status === "idle") return null;
   if (state.status === "busy") {
     return (
@@ -135,7 +141,7 @@ function OcrStatus({ state }: { state?: Ocr }) {
     <div className={`mt-3 rounded-lg border p-3 text-left text-xs ${state.warning ? "border-amber-200 bg-amber-50 text-amber-800" : "border-blue-100 bg-blue-50 text-blue-800"}`}>
       <p className="mb-1 flex items-center gap-1.5 font-bold"><Bot className="size-4" /> AI自動読取結果</p>
       {state.warning && <p>{state.warning} — 日付を手入力してください。</p>}
-      {state.details && Object.values(state.details).some(Boolean) && (
+      {!hideDetails && state.details && Object.values(state.details).some(Boolean) && (
         <p className="text-slate-600">{Object.values(state.details).filter(Boolean).join(" / ")}</p>
       )}
     </div>
@@ -151,11 +157,23 @@ function ExpiryInput({ name, label, value, onChange }: { name: string; label: st
   );
 }
 
-function LicenseForm({ token, onDone }: { token: string; onDone: () => void }) {
+const LICENSE_FIELDS = [
+  { key: "license_number", label: "免許証番号", placeholder: "12桁", mono: true },
+  { key: "license_class", label: "種類", placeholder: "例: 普通・準中型" },
+  { key: "license_conditions", label: "条件等", placeholder: "例: AT限定、眼鏡等 (なければ空欄)" },
+] as const;
+
+function LicenseForm({ token, driver, onDone }: { token: string; driver: PortalDriver; onDone: () => void }) {
   const [state, action, pending] = useActionState(submitDocuments, null);
   const [front, setFront] = useState<File | null>(null);
   const [back, setBack] = useState<File | null>(null);
   const [expiry, setExpiry] = useState("");
+  // 登録済みの内容を初期値にし、AI の読取結果があれば上書きする (本人が確認・修正して送信)
+  const [info, setInfo] = useState<Record<string, string>>({
+    license_number: driver.license_number,
+    license_class: driver.license_class,
+    license_conditions: driver.license_conditions,
+  });
   const { ocr, run } = useOcr(token);
   useActionFeedback(state, onDone);
 
@@ -182,11 +200,33 @@ function LicenseForm({ token, onDone }: { token: string; onDone: () => void }) {
           file={front}
           onChange={(f) => {
             setFront(f);
-            if (f) run("license_front", f, setExpiry);
+            if (f)
+              run("license_front", f, setExpiry, (details) =>
+                setInfo((prev) => {
+                  const next = { ...prev };
+                  for (const { key } of LICENSE_FIELDS) if (details[key]) next[key] = details[key];
+                  return next;
+                }),
+              );
           }}
         />
-        <OcrStatus state={ocr.license_front} />
+        <OcrStatus state={ocr.license_front} hideDetails />
         {front && <ExpiryInput name="expiry_license" label="有効期限" value={expiry} onChange={setExpiry} />}
+        {front &&
+          LICENSE_FIELDS.map((f) => (
+            <div key={f.key} className="mt-3 text-left">
+              <label className="field-label" htmlFor={`lic-${f.key}`}>{f.label}</label>
+              <input
+                id={`lic-${f.key}`}
+                name={f.key}
+                value={info[f.key] ?? ""}
+                onChange={(e) => setInfo((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                placeholder={f.placeholder}
+                inputMode={f.key === "license_number" ? "numeric" : undefined}
+                className={`field text-base ${"mono" in f ? "font-mono" : ""}`}
+              />
+            </div>
+          ))}
       </section>
       <section className="card p-5 text-center">
         <p className="mb-3 text-sm font-bold text-slate-700">

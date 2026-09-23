@@ -9,7 +9,16 @@ import { DocsTab, type DocGroup } from "./docs-tab";
 
 export type PortalDriver = Pick<
   Driver,
-  "name" | "type" | "phone" | "email" | "emergency_contact_name" | "emergency_contact_phone" | "license_expiry"
+  | "name"
+  | "type"
+  | "phone"
+  | "email"
+  | "emergency_contact_name"
+  | "emergency_contact_phone"
+  | "license_expiry"
+  | "license_number"
+  | "license_class"
+  | "license_conditions"
 >;
 export type PortalVehicle = Pick<
   Vehicle,

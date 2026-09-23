@@ -16,6 +16,12 @@ export type Driver = {
   line_user_id: string;
   /** 運転免許証の有効期限 (YYYY-MM-DD) */
   license_expiry: string;
+  /** 免許証番号 (12桁) */
+  license_number: string;
+  /** 免許の種類 (例: 普通・準中型) */
+  license_class: string;
+  /** 免許の条件等 (例: AT限定、眼鏡等) */
+  license_conditions: string;
   /** ポータルURL用の推測困難なトークン。漏えい時は再発行する */
   portal_token: string;
 };

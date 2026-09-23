@@ -14,6 +14,9 @@ export const COLUMNS: { [K in TableName]: (keyof Tables[K] & string)[] } = {
     "emergency_contact_phone",
     "line_user_id",
     "license_expiry",
+    "license_number",
+    "license_class",
+    "license_conditions",
     "portal_token",
   ],
   vehicles: [

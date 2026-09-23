@@ -69,7 +69,7 @@ gcloud run deploy fleet-manager \
 
 | シート | 列 |
 | --- | --- |
-| drivers | id, name, type, status, phone, email, ★emergency_contact_name, ★emergency_contact_phone, line_user_id, ★license_expiry, ★portal_token |
+| drivers | id, name, type, status, phone, email, ★emergency_contact_name, ★emergency_contact_phone, line_user_id, ★license_expiry, ★license_number, ★license_class, ★license_conditions, ★portal_token |
 | vehicles | id, plate, car_type, usage_type, current_driver_id, status, inspection_expiry, ★insurance_expiry, current_mileage, last_oil_mileage |
 | daily_reports | id, date, driver_id, vehicle_id, mileage, is_oil_changed, ★tire_ok, ★lights_brakes_ok, photo_url |
 | documents | id, date, driver_id, ★vehicle_id, doc_type, file_url, parsed_expiry_date, ★uploaded_by |

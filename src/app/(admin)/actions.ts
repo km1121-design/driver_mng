@@ -52,6 +52,9 @@ export async function saveDriver(_prev: ActionResult, form: FormData): Promise<A
       emergency_contact_phone: str(form, "emergency_contact_phone"),
       line_user_id: str(form, "line_user_id"),
       license_expiry: licenseExpiry,
+      license_number: str(form, "license_number").replace(/[^0-9]/g, ""),
+      license_class: str(form, "license_class"),
+      license_conditions: str(form, "license_conditions"),
     } satisfies Partial<Driver>;
 
     const repo = getRepo();

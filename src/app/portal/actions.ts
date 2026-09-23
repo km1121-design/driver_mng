@@ -113,7 +113,12 @@ export async function submitDocuments(_prev: ActionResult, form: FormData): Prom
           uploaded_by: "driver",
         });
       }
-      await repo.update("drivers", driver.id, { license_expiry: expiry });
+      await repo.update("drivers", driver.id, {
+        license_expiry: expiry,
+        license_number: str(form, "license_number").replace(/[^0-9]/g, ""),
+        license_class: str(form, "license_class"),
+        license_conditions: str(form, "license_conditions"),
+      });
     } else if (group === "vehicle") {
       if (!vehicle) return { ok: false, message: "担当車両が割り当てられていません" };
       const files = VEHICLE_DOCS.map((t) => [t, file(form, t)] as const).filter(([, f]) => f);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Pencil, Plus, RefreshCw, Search } from "lucide-react";
+import { Copy, ExternalLink, IdCard, Pencil, Plus, RefreshCw, Search } from "lucide-react";
 import { useActionState, useMemo, useState, useTransition } from "react";
 import { DriverStatusBadge, DriverTypeBadge, ExpiryDate } from "@/components/badges";
 import { Modal } from "@/components/modal";
@@ -16,15 +16,45 @@ import {
 } from "@/lib/types";
 import { regeneratePortalToken, saveDriver } from "../actions";
 
+/** ドライバーごとの最新の免許証画像 (表・裏) */
+export type LicensePhotos = Record<string, { front?: string; back?: string; date?: string }>;
+
+/** 免許の種類と条件 (AT限定などは車両の割り当てに影響するため目立たせる) */
+function LicenseSummary({ d }: { d: Driver }) {
+  if (!d.license_class && !d.license_number) return <span className="text-sm text-slate-400">未登録</span>;
+  return (
+    <div className="space-y-1">
+      <p className="text-sm font-medium text-slate-800">{d.license_class || "種類未登録"}</p>
+      {d.license_conditions && (
+        <div className="flex flex-wrap gap-1">
+          {d.license_conditions.split(/[、,]\s*/).filter(Boolean).map((c) => (
+            <span
+              key={c}
+              className={`rounded border px-1.5 py-0.5 text-[10px] font-bold ${
+                c.includes("AT") ? "border-amber-200 bg-amber-50 text-amber-800" : "border-slate-200 bg-slate-50 text-slate-600"
+              }`}
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
+      {d.license_number && <p className="font-mono text-[11px] text-slate-400">No. {d.license_number}</p>}
+    </div>
+  );
+}
+
 export function DriversView({
   drivers,
   vehicles,
   lastReport,
+  licensePhotos,
   baseUrl,
 }: {
   drivers: Driver[];
   vehicles: Vehicle[];
   lastReport: Record<string, string>;
+  licensePhotos: LicensePhotos;
   baseUrl: string;
 }) {
   const [q, setQ] = useState("");
@@ -36,7 +66,7 @@ export function DriversView({
     return drivers.filter((d) => {
       if (status === "enrolled" ? d.status === "retired" : status !== "all" && d.status !== status) return false;
       if (!kw) return true;
-      return `${d.name}${d.phone}${d.email}`.replaceAll(/[\s-]/g, "").includes(kw);
+      return `${d.name}${d.phone}${d.email}${d.license_number}`.replaceAll(/[\s-]/g, "").includes(kw);
     });
   }, [drivers, q, status]);
 
@@ -65,7 +95,7 @@ export function DriversView({
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="氏名、電話番号、メールで検索..."
+              placeholder="氏名、電話番号、メール、免許証番号で検索..."
               className="field bg-white pl-9"
             />
           </div>
@@ -86,6 +116,7 @@ export function DriversView({
               <th className="p-4 font-medium">区分</th>
               <th className="p-4 font-medium">ステータス</th>
               <th className="p-4 font-medium">担当車両</th>
+              <th className="p-4 font-medium">免許 (種類・条件)</th>
               <th className="p-4 font-medium">免許有効期限</th>
               <th className="p-4 font-medium">最終報告</th>
               <th className="p-4 text-right font-medium">操作</th>
@@ -101,6 +132,7 @@ export function DriversView({
                 <td className="p-4"><DriverTypeBadge type={d.type} /></td>
                 <td className="p-4"><DriverStatusBadge status={d.status} /></td>
                 <td className="p-4 text-sm">{vehicleOf(d.id)?.plate ?? <span className="text-slate-400">—</span>}</td>
+                <td className="p-4"><LicenseSummary d={d} /></td>
                 <td className="p-4"><ExpiryDate ymd={d.license_expiry} /></td>
                 <td className="p-4 text-xs text-slate-500">{lastReport[d.id] ? formatDateTime(lastReport[d.id]) : "—"}</td>
                 <td className="p-4 text-right">
@@ -130,6 +162,10 @@ export function DriversView({
                 <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
                   <DriverTypeBadge type={d.type} /> {d.phone}
                 </div>
+                <div className="mt-2 flex items-start justify-between gap-3 text-xs">
+                  <span className="shrink-0 text-slate-500">免許</span>
+                  <div className="text-right [&_div]:justify-end"><LicenseSummary d={d} /></div>
+                </div>
                 <div className="mt-2 flex items-center justify-between text-xs">
                   <span className="text-slate-500">免許期限</span>
                   <ExpiryDate ymd={d.license_expiry} />
@@ -145,6 +181,7 @@ export function DriversView({
       <DriverModal
         key={editing === "new" ? "new" : (editing?.id ?? "none")}
         driver={editing}
+        photos={editing && editing !== "new" ? licensePhotos[editing.id] : undefined}
         baseUrl={baseUrl}
         onClose={() => setEditing(null)}
       />
@@ -154,10 +191,12 @@ export function DriversView({
 
 function DriverModal({
   driver,
+  photos,
   baseUrl,
   onClose,
 }: {
   driver: Driver | "new" | null;
+  photos?: LicensePhotos[string];
   baseUrl: string;
   onClose: () => void;
 }) {
@@ -203,10 +242,54 @@ function DriverModal({
             </select>
           </div>
         </div>
-        <div>
-          <label className="field-label">免許証の有効期限</label>
-          <input type="date" name="license_expiry" defaultValue={d?.license_expiry} className="field" />
-        </div>
+        <fieldset className="space-y-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+          <legend className="flex items-center gap-1.5 px-1 text-xs font-bold text-blue-800">
+            <IdCard className="size-4" /> 運転免許証
+          </legend>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="field-label" htmlFor="dm-lic-number">免許証番号</label>
+              <input id="dm-lic-number" name="license_number" inputMode="numeric" maxLength={12} defaultValue={d?.license_number} placeholder="12桁" className="field bg-white font-mono" />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="dm-lic-expiry">有効期限</label>
+              <input id="dm-lic-expiry" type="date" name="license_expiry" defaultValue={d?.license_expiry} className="field bg-white" />
+            </div>
+          </div>
+          <div>
+            <label className="field-label" htmlFor="dm-lic-class">種類</label>
+            <input id="dm-lic-class" name="license_class" list="license-classes" defaultValue={d?.license_class} placeholder="例: 普通・準中型" className="field bg-white" />
+            <datalist id="license-classes">
+              {["普通", "普通・準中型", "普通・準中型・中型", "普通・準中型・中型・大型"].map((v) => <option key={v} value={v} />)}
+            </datalist>
+          </div>
+          <div>
+            <label className="field-label" htmlFor="dm-lic-cond">条件等</label>
+            <input id="dm-lic-cond" name="license_conditions" defaultValue={d?.license_conditions} placeholder="例: AT限定、眼鏡等 (なければ空欄)" className="field bg-white" />
+          </div>
+          {d && (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-slate-500">提出された画像:</span>
+              {photos?.front || photos?.back ? (
+                <>
+                  {photos.front && (
+                    <a href={photos.front} target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 font-bold text-blue-600">
+                      表面 <ExternalLink className="size-3" />
+                    </a>
+                  )}
+                  {photos.back && (
+                    <a href={photos.back} target="_blank" rel="noreferrer" className="flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 font-bold text-blue-600">
+                      裏面 <ExternalLink className="size-3" />
+                    </a>
+                  )}
+                  {photos.date && <span className="text-slate-400">{formatDateTime(photos.date)} 提出</span>}
+                </>
+              ) : (
+                <span className="text-slate-400">まだ提出されていません</span>
+              )}
+            </div>
+          )}
+        </fieldset>
         <div>
           <label className="field-label">本人の連絡先</label>
           <input type="tel" name="phone" defaultValue={d?.phone} placeholder="電話番号" className="field mb-2" />

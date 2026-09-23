@@ -16,8 +16,8 @@ export type OcrResult = {
 const PROMPTS: Partial<Record<DocType, { instruction: string; detailKeys: string[] }>> = {
   license_front: {
     instruction:
-      "これは日本の運転免許証の表面です。「○年○月○日まで有効」の日付を有効期限として読み取ってください。",
-    detailKeys: ["name", "license_number"],
+      "これは日本の運転免許証の表面です。「○年○月○日まで有効」の日付を有効期限として読み取ってください。license_number は「番号」欄の12桁の数字、license_class は「種類」欄で取得済みの免許区分を「・」区切りで (例: 普通・準中型)、license_conditions は「免許の条件等」欄の内容を「、」区切りで (例: AT限定、眼鏡等。記載がなければ空文字) 入れてください。",
+    detailKeys: ["name", "license_number", "license_class", "license_conditions"],
   },
   inspection_cert: {
     instruction:
@@ -55,7 +55,10 @@ export async function runOcr(
     d.setFullYear(d.getFullYear() + (docType === "license_front" ? 3 : 2));
     return {
       expiry_date: d.toISOString().slice(0, 10),
-      details: docType === "license_front" ? { license_number: "301234567890" } : { plate: "品川 500 め 12-34" },
+      details:
+        docType === "license_front"
+          ? { license_number: "301234567890", license_class: "普通・準中型", license_conditions: "眼鏡等" }
+          : { plate: "品川 500 め 12-34" },
       warning: "",
       demo: true,
     };

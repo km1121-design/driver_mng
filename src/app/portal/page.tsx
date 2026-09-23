@@ -44,6 +44,9 @@ export default async function PortalPage({ searchParams }: PageProps<"/portal">)
           emergency_contact_name: driver.emergency_contact_name,
           emergency_contact_phone: driver.emergency_contact_phone,
           license_expiry: driver.license_expiry,
+          license_number: driver.license_number,
+          license_class: driver.license_class,
+          license_conditions: driver.license_conditions,
         }}
         vehicle={
           vehicle && {
