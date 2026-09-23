@@ -25,7 +25,7 @@ function seed(): { [K in TableName]: Tables[K][] } {
         email: "sato@example.com",
         emergency_contact_name: "佐藤 花子 (妻)",
         emergency_contact_phone: "090-0000-1111",
-        line_user_id: "",
+        line_user_id: "U0000000000000000000000000000d001",
         license_expiry: addDays(1200),
         license_number: "301234567890",
         license_class: "普通・準中型",
@@ -205,5 +205,11 @@ export const mockRepository: Repository = {
     if (idx < 0) throw new Error(`${table}: id=${id} が見つかりません`);
     rows[idx] = { ...rows[idx], ...patch };
     return structuredClone(rows[idx]);
+  },
+  async insertMany(table, rows) {
+    for (const row of rows) await this.insert(table, row);
+  },
+  async updateMany(table, patches) {
+    for (const { id, patch } of patches) await this.update(table, id, patch);
   },
 };

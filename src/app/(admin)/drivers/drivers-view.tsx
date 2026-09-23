@@ -1,6 +1,7 @@
 "use client";
 
-import { Copy, ExternalLink, IdCard, Pencil, Plus, RefreshCw, Search } from "lucide-react";
+import { Copy, ExternalLink, FileUp, IdCard, Pencil, Plus, RefreshCw, Search } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useMemo, useState, useTransition } from "react";
 import { DriverStatusBadge, DriverTypeBadge, ExpiryDate } from "@/components/badges";
 import { Modal } from "@/components/modal";
@@ -44,18 +45,28 @@ function LicenseSummary({ d }: { d: Driver }) {
   );
 }
 
+function LineBadge({ linked }: { linked: boolean }) {
+  return linked ? (
+    <span className="rounded bg-green-50 px-1.5 py-0.5 text-[10px] font-bold text-green-700">LINE</span>
+  ) : (
+    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-400">LINE未連携</span>
+  );
+}
+
 export function DriversView({
   drivers,
   vehicles,
   lastReport,
   licensePhotos,
   baseUrl,
+  lineLinkBase,
 }: {
   drivers: Driver[];
   vehicles: Vehicle[];
   lastReport: Record<string, string>;
   licensePhotos: LicensePhotos;
   baseUrl: string;
+  lineLinkBase: string;
 }) {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<DriverStatus | "all" | "enrolled">("enrolled");
@@ -78,13 +89,21 @@ export function DriversView({
         title="ドライバー台帳"
         description={`${filtered.length} 名を表示中`}
         action={
-          <button
-            type="button"
-            onClick={() => setEditing("new")}
-            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-          >
-            <Plus className="size-4" /> 新規ドライバー登録
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/import?kind=drivers"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            >
+              <FileUp className="size-4" /> 一括取り込み
+            </Link>
+            <button
+              type="button"
+              onClick={() => setEditing("new")}
+              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+            >
+              <Plus className="size-4" /> 新規ドライバー登録
+            </button>
+          </div>
         }
       />
 
@@ -126,7 +145,7 @@ export function DriversView({
             {filtered.map((d) => (
               <tr key={d.id} className="transition-colors hover:bg-slate-50">
                 <td className="p-4">
-                  <p className="font-bold text-slate-800">{d.name}</p>
+                  <p className="flex items-center gap-1.5 font-bold text-slate-800">{d.name} <LineBadge linked={Boolean(d.line_user_id)} /></p>
                   <p className="text-xs text-slate-500">{d.phone || "電話番号未登録"}</p>
                 </td>
                 <td className="p-4"><DriverTypeBadge type={d.type} /></td>
@@ -156,7 +175,7 @@ export function DriversView({
             <li key={d.id}>
               <button type="button" onClick={() => setEditing(d)} className="w-full p-4 text-left active:bg-slate-50">
                 <div className="flex items-center justify-between">
-                  <p className="font-bold">{d.name}</p>
+                  <p className="flex items-center gap-1.5 font-bold">{d.name} <LineBadge linked={Boolean(d.line_user_id)} /></p>
                   <DriverStatusBadge status={d.status} />
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
@@ -183,6 +202,7 @@ export function DriversView({
         driver={editing}
         photos={editing && editing !== "new" ? licensePhotos[editing.id] : undefined}
         baseUrl={baseUrl}
+        lineLinkBase={lineLinkBase}
         onClose={() => setEditing(null)}
       />
     </>
@@ -193,11 +213,13 @@ function DriverModal({
   driver,
   photos,
   baseUrl,
+  lineLinkBase,
   onClose,
 }: {
   driver: Driver | "new" | null;
   photos?: LicensePhotos[string];
   baseUrl: string;
+  lineLinkBase: string;
   onClose: () => void;
 }) {
   const [state, action, pending] = useActionState(saveDriver, null);
@@ -206,6 +228,7 @@ function DriverModal({
   useActionFeedback(state, onClose);
   const d = driver && driver !== "new" ? driver : null;
   const url = d ? `${baseUrl}/portal?id=${d.portal_token}` : "";
+  const lineLink = d ? `${lineLinkBase}?link=${d.portal_token}` : "";
 
   return (
     <Modal
@@ -302,7 +325,25 @@ function DriverModal({
         </div>
         <div>
           <label className="field-label">LINE ユーザーID</label>
-          <input name="line_user_id" defaultValue={d?.line_user_id} placeholder="U から始まるID (公式アカウントの友だち追加時に取得)" className="field font-mono text-xs" />
+          <input name="line_user_id" defaultValue={d?.line_user_id} placeholder="U から始まるID (下の登録用リンクで自動入力)" className="field font-mono text-xs" />
+          {d && (
+            <div className="mt-2 rounded-lg bg-green-50 p-3">
+              <p className="mb-1.5 text-xs text-green-800">
+                LINE 登録用リンク: 公式アカウントのチャットでドライバーに送り、LINE 上で開いてもらうと ID が自動で登録されます。
+              </p>
+              <div className="flex gap-2">
+                <input readOnly value={lineLink} className="field bg-white font-mono text-xs" onFocus={(e) => e.target.select()} />
+                <button
+                  type="button"
+                  aria-label="LINE 登録用リンクをコピー"
+                  onClick={() => navigator.clipboard.writeText(lineLink).then(() => toast("LINE 登録用リンクをコピーしました", "success"))}
+                  className="shrink-0 rounded-lg border border-green-200 bg-white px-3 text-green-700 hover:bg-green-100"
+                >
+                  <Copy className="size-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {d && (

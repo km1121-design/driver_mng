@@ -28,4 +28,10 @@ export interface Repository {
     id: string,
     patch: Partial<Tables[T]>,
   ): Promise<Tables[T]>;
+  /** 一括登録・一括更新 (取り込み用。Sheets では API 呼び出しを1回にまとめる) */
+  insertMany<T extends TableName>(table: T, rows: Tables[T][]): Promise<void>;
+  updateMany<T extends TableName>(
+    table: T,
+    patches: { id: string; patch: Partial<Tables[T]> }[],
+  ): Promise<void>;
 }

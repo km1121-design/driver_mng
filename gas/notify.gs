@@ -6,9 +6,13 @@
  *   2. 「プロジェクトの設定 > スクリプト プロパティ」に以下を登録
  *        LINE_CHANNEL_ACCESS_TOKEN : LINE Messaging API のチャネルアクセストークン
  *        APP_BASE_URL              : Next.js アプリの URL (例: https://fleet.example.com)
+ *        LIFF_ID                   : (任意) 設定すると通知のリンクを LIFF の URL にする
+ *                                    (LINE ログインで本人確認するため、URL にトークンを載せない)
  *   3. setupTrigger() を一度だけ手動実行 → 毎朝 8 時台に dailyNotify() が動く
- *   4. (任意) ウェブアプリとしてデプロイし、その URL を LINE の Webhook URL に設定すると
- *      「登録:<ポータルトークン>」メッセージで line_user_id を自動紐付けできる
+ *   4. (任意・通常は不要) ウェブアプリとしてデプロイし、その URL を LINE の Webhook URL に設定すると
+ *      「登録:<ポータルトークン>」メッセージで line_user_id を自動紐付けできる。
+ *      LIFF の「LINE 登録用リンク」で紐付けられるため、LIFF を使う場合は設定しなくてよい。
+ *      他のツールが Webhook を使っている場合は、上書きするとそのツールが止まるので設定しないこと。
  *
  * しきい値は src/lib/config.ts の THRESHOLDS と揃えること。
  */
@@ -77,6 +81,7 @@ function normalizeYmd_(v) {
 function dailyNotify() {
   var props = PropertiesService.getScriptProperties();
   var baseUrl = props.getProperty("APP_BASE_URL");
+  var liffId = props.getProperty("LIFF_ID");
   var today = todayJst_();
 
   var drivers = readTable_("drivers").filter(function (d) { return d.status === "active"; });
@@ -96,6 +101,8 @@ function dailyNotify() {
     return days < 0 || EXPIRY_NOTIFY_DAYS.indexOf(days) >= 0;
   }
   function url(driver, path) {
+    // src/lib/config.ts の driverLink と同じ規則
+    if (liffId) return "https://liff.line.me/" + liffId + (path ? "?" + path.slice(1) : "");
     return baseUrl + "/portal?id=" + encodeURIComponent(driver.portal_token) + path;
   }
 

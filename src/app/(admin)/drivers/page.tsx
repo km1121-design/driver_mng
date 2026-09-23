@@ -1,5 +1,5 @@
 import { loadAll } from "@/lib/data";
-import { APP_BASE_URL } from "@/lib/config";
+import { APP_BASE_URL, liffUrl } from "@/lib/config";
 import { DriversView, type LicensePhotos } from "./drivers-view";
 
 export const metadata = { title: "ドライバー台帳" };
@@ -25,6 +25,7 @@ export default async function DriversPage() {
       lastReport={lastReport}
       licensePhotos={licensePhotos}
       baseUrl={APP_BASE_URL}
+      lineLinkBase={liffUrl()}
     />
   );
 }

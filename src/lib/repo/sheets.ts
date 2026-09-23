@@ -207,4 +207,38 @@ export const sheetsRepository: Repository = {
     cache.delete(table);
     return merged as Tables[typeof table];
   },
+
+  async insertMany(table, rows) {
+    if (!rows.length) return;
+    const { header } = await readSheet(table);
+    await googleFetch(
+      `${API}/${spreadsheetId()}/values/${encodeURIComponent(table)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ values: rows.map((r) => toRow(header, r as Record<string, unknown>)) }),
+      },
+    );
+    cache.delete(table);
+  },
+
+  async updateMany(table, patches) {
+    if (!patches.length) return;
+    cache.delete(table);
+    const { header, rows } = await readSheet(table);
+    const idCol = header.indexOf("id");
+    const data = patches.map(({ id, patch }) => {
+      const idx = rows.findIndex((r) => String(r[idCol] ?? "") === id);
+      if (idx < 0) throw new Error(`${table}: id=${id} が見つかりません`);
+      const rowNo = idx + 2;
+      const merged = { ...toRecord(header, rows[idx]), ...patch } as Record<string, unknown>;
+      return { range: `${table}!A${rowNo}:${colLetter(header.length)}${rowNo}`, values: [toRow(header, merged)] };
+    });
+    await googleFetch(`${API}/${spreadsheetId()}/values:batchUpdate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ valueInputOption: "RAW", data }),
+    });
+    cache.delete(table);
+  },
 };

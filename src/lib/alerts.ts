@@ -1,4 +1,4 @@
-import { THRESHOLDS, portalUrl } from "./config";
+import { THRESHOLDS, driverLink } from "./config";
 import { daysSince, daysUntil } from "./date";
 import type { AlertKind, AlertLog, DailyReport, Driver, Vehicle } from "./types";
 
@@ -153,7 +153,7 @@ const BODY: Record<AlertKind, (a: Alert) => string> = {
 /** 管理画面のプレビュー / 手動送信で使うメッセージ本文 */
 export function buildAlertMessage(a: Alert): string {
   const name = a.driver?.name ?? "ご担当者";
-  const url = a.driver ? portalUrl(a.driver.portal_token) + PORTAL_PATH[a.kind] : "";
+  const url = a.driver ? driverLink(a.driver.portal_token, PORTAL_PATH[a.kind]) : "";
   return `${name} さん
 管理者です。
 

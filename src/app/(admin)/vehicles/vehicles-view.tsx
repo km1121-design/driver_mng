@@ -1,6 +1,7 @@
 "use client";
 
-import { Droplet, ExternalLink, Pencil, Plus, Sparkles, Upload } from "lucide-react";
+import { Droplet, ExternalLink, FileUp, Pencil, Plus, Sparkles, Upload } from "lucide-react";
+import Link from "next/link";
 import { useActionState, useMemo, useRef, useState } from "react";
 import { ExpiryDate, VehicleStatusBadge } from "@/components/badges";
 import { Modal } from "@/components/modal";
@@ -47,13 +48,21 @@ export function VehiclesView({
         title="車両・車検管理"
         description={`${filtered.length} 台を表示中`}
         action={
-          <button
-            type="button"
-            onClick={() => setEditing("new")}
-            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-          >
-            <Plus className="size-4" /> 新規車両登録
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/import?kind=vehicles"
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            >
+              <FileUp className="size-4" /> 一括取り込み
+            </Link>
+            <button
+              type="button"
+              onClick={() => setEditing("new")}
+              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+            >
+              <Plus className="size-4" /> 新規車両登録
+            </button>
+          </div>
         }
       />
 

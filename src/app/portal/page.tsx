@@ -18,7 +18,7 @@ export default async function PortalPage({ searchParams }: PageProps<"/portal">)
           <ShieldAlert className="mx-auto mb-3 size-10 text-slate-400" />
           <h1 className="mb-2 font-bold">URLが無効です</h1>
           <p className="text-sm text-slate-500">
-            LINE で届いた専用URLから開き直してください。解決しない場合は管理者へご連絡ください。
+            LINE のメニュー、または LINE で届いた専用URLから開き直してください。解決しない場合は管理者へご連絡ください。
           </p>
         </div>
       </main>
