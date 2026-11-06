@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 // 管理画面は Basic 認証で保護する (ADMIN_PASSWORD 未設定時は開発用に素通し)。
-// ドライバーポータル (/portal)・LINE からの入口 (/liff)・OCR API はトークンで個別に認可するため対象外。
+// ドライバーポータル (/portal)・LINE からの入口 (/liff)・OCR API はトークンで個別に認可し、
+// 使い方ガイド (/guide) は誰でも見られる公開ページのため、いずれも対象外。
 export function proxy(request: NextRequest) {
   const user = process.env.ADMIN_USER ?? "admin";
   const password = process.env.ADMIN_PASSWORD;
@@ -25,5 +26,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!portal|liff|api/ocr|api/mock-files|_next/static|_next/image|favicon.ico|robots.txt).*)"],
+  matcher: ["/((?!portal|liff|guide|api/ocr|api/mock-files|_next/static|_next/image|favicon.ico|robots.txt).*)"],
 };

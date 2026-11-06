@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, User } from "lucide-react";
+import { Car, CircleHelp, User } from "lucide-react";
 import { useState } from "react";
 import { USAGE_TYPE_LABEL, type Driver, type Vehicle } from "@/lib/types";
 import { DailyTab } from "./daily-tab";
@@ -61,7 +61,15 @@ export function PortalApp({
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-slate-50 shadow-xl">
       <header className="sticky top-0 z-20 bg-slate-900 px-4 pb-0 pt-4 text-white shadow-md">
-        <h1 className="text-center text-sm font-bold">ドライバーポータル</h1>
+        <div className="relative">
+          <h1 className="text-center text-sm font-bold">ドライバーポータル</h1>
+          <a
+            href="/guide"
+            className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-1 text-[11px] font-bold text-slate-300"
+          >
+            <CircleHelp className="size-3.5" /> 使い方
+          </a>
+        </div>
         <div className="mt-3 flex items-center gap-3 rounded-xl border border-slate-700 bg-slate-800 p-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-500">
             <User className="size-5" />

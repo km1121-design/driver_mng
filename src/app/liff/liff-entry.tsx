@@ -106,6 +106,7 @@ export function LiffEntry({ liffId, demo, adminPhone }: { liffId: string | null;
         <ShieldAlert className="mx-auto mb-3 size-10 text-slate-400" />
         <h1 className="mb-2 font-bold">{text.title}</h1>
         <p className="text-sm text-slate-500">{text.body}</p>
+        <a href="/guide" className="mt-3 inline-block text-xs font-bold text-blue-600 underline">使い方ガイドを見る</a>
         {adminPhone && (
           <a
             href={`tel:${adminPhone}`}
