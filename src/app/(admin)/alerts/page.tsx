@@ -2,7 +2,7 @@ import { buildAlertMessage } from "@/lib/alerts";
 import { loadAll } from "@/lib/data";
 import { AlertsView } from "./alerts-view";
 
-export const metadata = { title: "期限アラート管理" };
+export const metadata = { title: "アラート一覧" };
 
 export default async function AlertsPage({ searchParams }: PageProps<"/alerts">) {
   const { focus } = await searchParams;
@@ -19,6 +19,9 @@ export default async function AlertsPage({ searchParams }: PageProps<"/alerts">)
         lineLinked: Boolean(a.driver?.line_user_id),
         plate: a.vehicle?.plate ?? null,
         lastManualNotice: a.lastManualNotice,
+        lastNotice: a.lastNotice,
+        waitingOn: a.waitingOn,
+        adminTask: a.adminTask,
         message: buildAlertMessage(a),
       }))}
     />

@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/">) {
     <ToastProvider>
       <div className="min-h-screen lg:flex">
         <Sidebar
-          alertCount={alerts.length}
+          alertCount={alerts.filter((a) => a.waitingOn === "admin").length}
           defectCount={defects.filter((d) => d.status === "open").length}
           demo={!isSheetsMode()}
         />

@@ -9,9 +9,26 @@ import { StickySubmit, type PortalVehicle } from "./portal-app";
 
 const MAX_PHOTOS = 5;
 
-export function DefectTab(props: { token: string; vehicle: PortalVehicle | null; adminPhone: string }) {
+export function DefectTab({
+  onSubmitted,
+  ...props
+}: {
+  token: string;
+  vehicle: PortalVehicle | null;
+  adminPhone: string;
+  onSubmitted?: () => void;
+}) {
   const [formKey, setFormKey] = useState(0);
-  return <DefectForm key={formKey} {...props} onDone={() => setFormKey((k) => k + 1)} />;
+  return (
+    <DefectForm
+      key={formKey}
+      {...props}
+      onDone={() => {
+        setFormKey((k) => k + 1);
+        onSubmitted?.();
+      }}
+    />
+  );
 }
 
 function DefectForm({

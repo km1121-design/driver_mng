@@ -93,7 +93,8 @@ export type AlertLog = {
   date: string;
   driver_id: string;
   kind: AlertKind;
-  channel: "auto" | "manual";
+  /** auto: GAS の自動通知 / manual: 管理画面からの手動送信 / escalated: 管理者へ引き継いだ記録 */
+  channel: "auto" | "manual" | "escalated";
 };
 
 export type AlertKind = "license" | "inspection" | "insurance" | "oil" | "unreported";
@@ -135,5 +136,5 @@ export const ALERT_KIND_LABEL: Record<AlertKind, string> = {
   inspection: "車検満了",
   insurance: "自賠責満了",
   oil: "オイル交換",
-  unreported: "走行距離未報告",
+  unreported: "走行距離 (月1回)",
 };

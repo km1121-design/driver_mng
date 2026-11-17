@@ -19,13 +19,16 @@ type Item = {
   lineLinked: boolean;
   plate: string | null;
   lastManualNotice: string | null;
+  lastNotice: string | null;
+  waitingOn: "driver" | "admin";
+  adminTask: string | null;
   message: string;
 };
 
 const GROUPS: { title: string; kinds: AlertKind[]; tone: string }[] = [
   { title: `免許・車検・自賠責 (${THRESHOLDS.expiryWarnDays}日以内)`, kinds: ["license", "inspection", "insurance"], tone: "red" },
   { title: `オイル交換推奨 (${THRESHOLDS.oilChangeKm.toLocaleString()}km超過)`, kinds: ["oil"], tone: "orange" },
-  { title: `走行距離 未報告 (${THRESHOLDS.unreportedDays}日以上)`, kinds: ["unreported"], tone: "slate" },
+  { title: `走行距離 今月未報告 (毎月${THRESHOLDS.mileageDueDay}日締め)`, kinds: ["unreported"], tone: "slate" },
 ];
 
 const TONE = {
@@ -62,8 +65,8 @@ export function AlertsView({ alerts, focus }: { alerts: Item[]; focus: string | 
   return (
     <>
       <PageHeader
-        title="期限アラート エスカレーション管理"
-        description="基本の通知は毎朝 GAS が LINE 公式アカウントから自動送信します。ここでは反応のないドライバーへの個別対応を行います。"
+        title="アラート一覧"
+        description="ドライバーへの通知は毎晩22時台に自動で送られます。ここでは一覧の確認と、必要なときの手動送信を行います。"
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -98,8 +101,10 @@ export function AlertsView({ alerts, focus }: { alerts: Item[]; focus: string | 
                           <p className={`text-xs font-bold ${a.severity === "critical" ? "text-red-600" : "text-orange-600"}`}>
                             {ALERT_KIND_LABEL[a.kind]}: {a.summary}
                           </p>
+                          {a.adminTask && <p className="mt-1 text-xs font-bold text-slate-700">管理者: {a.adminTask}</p>}
                           <p className="mt-0.5 text-[11px] text-slate-400">
-                            {a.lastManualNotice ? `前回手動送信: ${formatDateTime(a.lastManualNotice)}` : "手動送信なし"}
+                            {a.waitingOn === "driver" ? "本人の対応待ち・" : ""}
+                            {a.lastNotice ? `前回の通知: ${formatDateTime(a.lastNotice)}` : "通知はまだ送っていません"}
                             {!a.lineLinked && a.driverName && <span className="ml-2 text-amber-600">LINE未連携</span>}
                           </p>
                         </div>

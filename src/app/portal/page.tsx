@@ -2,6 +2,7 @@ import { ShieldAlert } from "lucide-react";
 import { ToastProvider } from "@/components/toast";
 import { resolvePortal } from "@/lib/data";
 import { getRepo } from "@/lib/repo";
+import { driverTodos } from "@/lib/todos";
 import { PortalApp } from "./portal-app";
 
 export const metadata = { title: "ドライバーポータル" };
@@ -26,9 +27,10 @@ export default async function PortalPage({ searchParams }: PageProps<"/portal">)
   }
 
   const { driver, vehicle } = portal;
-  const reports = (await getRepo().list("daily_reports"))
-    .filter((r) => r.driver_id === driver.id)
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const repo = getRepo();
+  const [allReports, vehicles] = await Promise.all([repo.list("daily_reports"), repo.list("vehicles")]);
+  const reports = allReports.filter((r) => r.driver_id === driver.id).sort((a, b) => b.date.localeCompare(a.date));
+  const { todos, mileage } = driverTodos({ driver, vehicles, reports });
   const tab = typeof sp.tab === "string" ? sp.tab : undefined;
   const doc = typeof sp.doc === "string" ? sp.doc : undefined;
 
@@ -60,9 +62,11 @@ export default async function PortalPage({ searchParams }: PageProps<"/portal">)
           }
         }
         lastReportAt={reports[0]?.date ?? null}
-        initialTab={tab === "docs" || tab === "defect" ? tab : "daily"}
+        initialTab={tab === "daily" || tab === "docs" || tab === "defect" ? tab : "home"}
         initialDoc={doc === "license" || doc === "vehicle" || doc === "contact" ? doc : null}
         adminPhone={process.env.ADMIN_PHONE ?? ""}
+        todos={todos}
+        mileage={mileage}
       />
     </ToastProvider>
   );

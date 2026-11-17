@@ -13,13 +13,26 @@ export function DailyTab({
   token,
   vehicle,
   lastReportAt,
+  onSubmitted,
 }: {
   token: string;
   vehicle: PortalVehicle | null;
   lastReportAt: string | null;
+  onSubmitted?: () => void;
 }) {
   const [formKey, setFormKey] = useState(0);
-  return <DailyForm key={formKey} token={token} vehicle={vehicle} lastReportAt={lastReportAt} onDone={() => setFormKey((k) => k + 1)} />;
+  return (
+    <DailyForm
+      key={formKey}
+      token={token}
+      vehicle={vehicle}
+      lastReportAt={lastReportAt}
+      onDone={() => {
+        setFormKey((k) => k + 1);
+        onSubmitted?.();
+      }}
+    />
+  );
 }
 
 function DailyForm({
@@ -89,19 +102,20 @@ function DailyForm({
       </section>
 
       <section className="card p-5">
-        <h2 className="mb-3 flex items-center text-sm font-bold">
-          <CheckCircle2 className="mr-2 size-4 text-green-500" /> 状態チェック
+        <h2 className="mb-1 flex items-center text-sm font-bold">
+          <CheckCircle2 className="mr-2 size-4 text-green-500" /> 気になるところ
         </h2>
+        <p className="mb-3 text-[11px] text-slate-500">問題がなければ、何もせずに送信してください。</p>
         {[
-          ["tire_ok", "タイヤの空気圧・溝は正常"],
-          ["lights_brakes_ok", "ランプ類・ブレーキ異常なし"],
+          ["tire_ng", "タイヤ（空気圧・溝）に異常がある"],
+          ["lights_ng", "ランプ類・ブレーキに異常がある"],
         ].map(([name, label]) => (
-          <label key={name} className="mb-2 flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3 last:mb-0">
-            <input type="checkbox" name={name} className="size-5 accent-blue-600" />
+          <label key={name} className="mb-2 flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3 last:mb-0 has-[:checked]:border-red-200 has-[:checked]:bg-red-50">
+            <input type="checkbox" name={name} className="size-5 accent-red-600" />
             <span className="text-sm font-medium text-slate-700">{label}</span>
           </label>
         ))}
-        <p className="mt-2 text-[11px] text-slate-400">異常がある場合はチェックを外して送信し、「車両報告」タブから詳細をお知らせください。</p>
+        <p className="mt-2 text-[11px] text-slate-400">チェックして送信すると、管理者にすぐ届きます。写真で伝えたいときは「車両報告」から送ってください。</p>
       </section>
 
       <section className="card p-5">
@@ -120,7 +134,7 @@ function DailyForm({
       </section>
 
       <StickySubmit form="daily-form" disabled={pending}>
-        <Send className="size-4" /> {pending ? "送信中..." : "定期報告を送信する"}
+        <Send className="size-4" /> {pending ? "送信中..." : "報告を送信する"}
       </StickySubmit>
     </form>
   );

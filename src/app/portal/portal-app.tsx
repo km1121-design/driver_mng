@@ -6,6 +6,9 @@ import { USAGE_TYPE_LABEL, type Driver, type Vehicle } from "@/lib/types";
 import { DailyTab } from "./daily-tab";
 import { DefectTab } from "./defect-tab";
 import { DocsTab, type DocGroup } from "./docs-tab";
+import { HomeTab } from "./home-tab";
+import type { MileageStatus } from "@/lib/alerts";
+import type { DriverTodo } from "@/lib/todos";
 
 export type PortalDriver = Pick<
   Driver,
@@ -31,9 +34,10 @@ export type PortalVehicle = Pick<
   | "insurance_expiry"
 >;
 
-type Tab = "daily" | "docs" | "defect";
+export type Tab = "home" | "daily" | "docs" | "defect";
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: "home", label: "ホーム" },
   { id: "daily", label: "距離・状態" },
   { id: "docs", label: "各種提出" },
   { id: "defect", label: "車両報告" },
@@ -47,6 +51,8 @@ export function PortalApp({
   initialTab,
   initialDoc,
   adminPhone,
+  todos,
+  mileage,
 }: {
   token: string;
   driver: PortalDriver;
@@ -55,8 +61,22 @@ export function PortalApp({
   initialTab: Tab;
   initialDoc: DocGroup | null;
   adminPhone: string;
+  todos: DriverTodo[];
+  mileage: MileageStatus | null;
 }) {
   const [tab, setTab] = useState<Tab>(initialTab);
+  const [doc, setDoc] = useState<DocGroup | null>(initialDoc);
+  // 送信が終わったらホームへ戻す (サーバー側の再検証で「今やること」も更新される)
+  const goHome = () => {
+    setDoc(null);
+    setTab("home");
+    scrollTo(0, 0);
+  };
+  const open = (t: Tab, d: DocGroup | null = null) => {
+    setDoc(d);
+    setTab(t);
+    scrollTo(0, 0);
+  };
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-slate-50 shadow-xl">
@@ -89,7 +109,7 @@ export function PortalApp({
             <button
               key={t.id}
               type="button"
-              onClick={() => setTab(t.id)}
+              onClick={() => open(t.id)}
               className={`flex-1 border-b-2 py-3 text-xs font-bold transition-colors ${
                 tab === t.id ? "border-blue-400 text-white" : "border-transparent text-slate-400"
               }`}
@@ -101,9 +121,14 @@ export function PortalApp({
       </header>
 
       <div className="flex-1 p-4 pb-28">
-        {tab === "daily" && <DailyTab token={token} vehicle={vehicle} lastReportAt={lastReportAt} />}
-        {tab === "docs" && <DocsTab token={token} driver={driver} vehicle={vehicle} initialDoc={initialDoc} />}
-        {tab === "defect" && <DefectTab token={token} vehicle={vehicle} adminPhone={adminPhone} />}
+        {tab === "home" && (
+          <HomeTab todos={todos} mileage={mileage} hasVehicle={Boolean(vehicle)} onGo={(t) => open(t.tab, "doc" in t ? (t.doc ?? null) : null)} />
+        )}
+        {tab === "daily" && <DailyTab token={token} vehicle={vehicle} lastReportAt={lastReportAt} onSubmitted={goHome} />}
+        {tab === "docs" && (
+          <DocsTab key={doc ?? "list"} token={token} driver={driver} vehicle={vehicle} initialDoc={doc} onSubmitted={goHome} />
+        )}
+        {tab === "defect" && <DefectTab token={token} vehicle={vehicle} adminPhone={adminPhone} onSubmitted={goHome} />}
       </div>
     </div>
   );

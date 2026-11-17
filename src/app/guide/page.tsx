@@ -4,6 +4,7 @@ import {
   CircleHelp,
   Gauge,
   IdCard,
+  ListChecks,
   MessageCircle,
   Phone,
   ShieldCheck,
@@ -91,15 +92,15 @@ function NotifyMock() {
       <div className="rounded-2xl rounded-tl-sm bg-white p-3 text-[12px] leading-relaxed text-slate-700">
         佐藤 健一 さん
         <br />
-        管理者です。
+        おつかれさまです。管理者です。
         <br />
         <br />
-        運転免許証の有効期限が近づいています（残り30日）。
+        運転免許証の有効期限まで あと30日です。
         <br />
-        更新後、新しい免許証の写真（表・裏）をアップロードしてください。
+        更新したら、新しい免許証の写真（表・裏）を送ってください。
         <br />
         <br />
-        ▼【佐藤さん専用】提出フォーム
+        ▼ここから開けます（メニューの「車両管理」からも開けます）
         <br />
         <span className="break-all text-blue-600 underline">https://liff.line.me/…</span>
       </div>
@@ -140,7 +141,7 @@ export default async function GuidePage() {
           items={[
             <>会社の LINE 公式アカウントのトーク画面を開きます。</>,
             <>画面の下のメニューから<b>「車両管理」</b>を押します。</>,
-            <>あなた専用の画面が開きます。上にあなたの名前と、担当の車が表示されます。</>,
+            <>あなた専用の画面が開きます。最初に「<b>今やること</b>」が表示されます。</>,
           ]}
         />
         <Note>
@@ -152,23 +153,36 @@ export default async function GuidePage() {
         </Note>
       </Step>
 
-      <Step n={2} icon={Gauge} title="走行距離を報告する">
+      <Step n={2} icon={ListChecks} title="「今やること」を見る">
+        <Shot src="/guide/home.jpg" alt="ホーム画面の「今やること」" />
+        <Points
+          items={[
+            <>開くと、<b>あなたが今やること</b>だけが表示されます。</>,
+            <>大きなボタンを押すと、そのまま提出・報告の画面に進みます。</>,
+            <>赤いものは期限切れや締め切り過ぎです。先にお願いします。</>,
+            <>何もなければ「<b>今やることはありません</b>」と表示されます。閉じて大丈夫です。</>,
+          ]}
+        />
+      </Step>
+
+      <Step n={3} icon={Gauge} title="走行距離を報告する（月1回）">
         <Shot src="/guide/daily.jpg" alt="「距離・状態」タブの画面" />
         <Points
           items={[
             <>「<b>距離・状態</b>」タブで、車のメーターの数字（走行距離）を入れます。</>,
-            <>タイヤ、ランプ・ブレーキに問題がなければ、チェックを入れます。</>,
+            <>タイヤやランプ・ブレーキに<b>異常があるときだけ</b>チェックします。問題がなければ何もしなくて大丈夫です。</>,
             <>オイル交換をした日は「本日、オイル交換を実施した」にチェックを入れ、レシートかシールの写真を撮ります。</>,
-            <>「<b>定期報告を送信する</b>」を押して完了です。</>,
+            <>「<b>報告を送信する</b>」を押して完了です。</>,
           ]}
         />
         <Note>
-          少なくとも<b>2週間に1回</b>は報告してください。報告がないと、LINE でお知らせが届きます。
-          異常があるときはチェックを外して送信し、③の「車両報告」で詳しく知らせてください。
+          走行距離の報告は<b>毎月1回、1日〜7日</b>にお願いします。まだの人には、1日と5日の夜に LINE でお知らせが届きます。
+          オイル交換をしたときは、月の途中でもその日に報告してください。
+          キズなどを写真で伝えたいときは、⑤の「車両報告」から送ってください。
         </Note>
       </Step>
 
-      <Step n={3} icon={IdCard} title="免許証・車検証を提出する">
+      <Step n={4} icon={IdCard} title="免許証・車検証を提出する">
         <Shot src="/guide/docs.jpg" alt="「各種提出」タブの画面" />
         <Points
           items={[
@@ -187,7 +201,7 @@ export default async function GuidePage() {
         </ul>
       </Step>
 
-      <Step n={4} icon={Wrench} title="車のキズ・不具合を報告する">
+      <Step n={5} icon={Wrench} title="車のキズ・不具合を報告する">
         <Shot src="/guide/defect.jpg" alt="「車両報告」タブの画面" />
         <Points
           items={[
@@ -201,7 +215,7 @@ export default async function GuidePage() {
         </Note>
       </Step>
 
-      <Step n={5} icon={Camera} title="きれいに撮るコツ">
+      <Step n={6} icon={Camera} title="きれいに撮るコツ">
         <ul className="grid grid-cols-2 gap-2 text-sm text-slate-700">
           {[
             { icon: Sun, text: "明るい場所で撮る" },
@@ -220,16 +234,19 @@ export default async function GuidePage() {
         </p>
       </Step>
 
-      <Step n={6} icon={Bell} title="LINE に届くお知らせ">
+      <Step n={7} icon={Bell} title="LINE に届くお知らせ">
         <NotifyMock />
         <p className="text-[15px] leading-relaxed text-slate-700">
-          免許証・車検・自賠責の期限が近づいたとき、オイル交換の時期になったとき、走行距離の報告が2週間ないときに、
-          朝8時ごろ LINE でお知らせが届きます。リンクを押すと、提出する画面がそのまま開きます。
+          免許証・車検・自賠責の期限が近づいたとき、オイル交換の時期になったとき、今月の走行距離がまだのときに、
+          <b>夜10時ごろ</b>（シフトのお知らせと同じころ）LINE でお知らせが届きます。運転中に届くことはありません。
+          リンクを押すと、やることの画面がそのまま開きます。
         </p>
-        <Note>提出が終わると、そのお知らせは止まります。</Note>
+        <Note>
+          お知らせは期限の45日前・30日前・14日前・7日前など、節目の日だけです。同じ日のお知らせは1通にまとめます。提出が終わると止まります。
+        </Note>
       </Step>
 
-      <Step n={7} icon={CircleHelp} title="こまったとき">
+      <Step n={8} icon={CircleHelp} title="こまったとき">
         <ul className="space-y-2 text-[15px] leading-relaxed text-slate-700">
           <li>・ふだんの業務報告やシフトの連絡は、これまでどおり LINE のトークでやり取りできます。</li>
           <li>・画面が開かない、使い方がわからないときは、管理者に連絡してください。</li>

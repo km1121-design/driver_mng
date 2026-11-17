@@ -56,16 +56,17 @@ export async function submitDailyReport(_prev: ActionResult, form: FormData): Pr
       vehicle_id: vehicle.id,
       mileage,
       is_oil_changed: oil,
-      tire_ok: form.get("tire_ok") === "on",
-      lights_brakes_ok: form.get("lights_brakes_ok") === "on",
+      // 画面は「異常がある」ときだけチェックする形 (何もしなければ異常なし)
+      tire_ok: form.get("tire_ng") !== "on",
+      lights_brakes_ok: form.get("lights_ng") !== "on",
       photo_url: photoUrl,
     });
     await repo.update("vehicles", vehicle.id, {
       current_mileage: mileage,
       ...(oil ? { last_oil_mileage: mileage } : {}),
     });
-    const tireOk = form.get("tire_ok") === "on";
-    const lightsOk = form.get("lights_brakes_ok") === "on";
+    const tireOk = form.get("tire_ng") !== "on";
+    const lightsOk = form.get("lights_ng") !== "on";
     if (!tireOk || !lightsOk) {
       const ng = [!tireOk && "タイヤ", !lightsOk && "ランプ類・ブレーキ"].filter(Boolean).join("・");
       await notifyAdmin(
@@ -77,7 +78,7 @@ ${APP_BASE_URL}/`,
       );
     }
     revalidatePath("/", "layout");
-    return { ok: true, message: "定期報告を送信しました。ありがとうございます！" };
+    return { ok: true, message: "報告を送信しました。ありがとうございます！" };
   } catch (e) {
     return fail(e);
   }

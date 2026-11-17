@@ -9,7 +9,7 @@ const NAV = [
   { href: "/", label: "ダッシュボード", icon: LayoutDashboard },
   { href: "/drivers", label: "ドライバー台帳", icon: IdCard },
   { href: "/vehicles", label: "車両・車検管理", icon: Car },
-  { href: "/alerts", label: "期限アラート管理", icon: Bell, badge: "alerts" as const },
+  { href: "/alerts", label: "アラート一覧", icon: Bell, badge: "alerts" as const },
   { href: "/defects", label: "車両報告 (キズ等)", icon: Wrench, badge: "defects" as const },
 ];
 

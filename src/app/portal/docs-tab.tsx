@@ -23,14 +23,17 @@ export function DocsTab({
   driver,
   vehicle,
   initialDoc,
+  onSubmitted,
 }: {
   token: string;
   driver: PortalDriver;
   vehicle: PortalVehicle | null;
   initialDoc: DocGroup | null;
+  onSubmitted?: () => void;
 }) {
   const [group, setGroup] = useState<DocGroup | null>(initialDoc);
   const back = () => setGroup(null);
+  const done = onSubmitted ?? back;
 
   if (!group) {
     const items = [
@@ -71,9 +74,9 @@ export function DocsTab({
       <button type="button" onClick={back} className="mb-4 flex items-center gap-1 py-1 text-sm font-bold text-slate-500">
         <ArrowLeft className="size-4" /> 戻る
       </button>
-      {group === "license" && <LicenseForm token={token} driver={driver} onDone={back} />}
-      {group === "vehicle" && <VehicleDocsForm token={token} onDone={back} />}
-      {group === "contact" && <ContactForm token={token} driver={driver} onDone={back} />}
+      {group === "license" && <LicenseForm token={token} driver={driver} onDone={done} />}
+      {group === "vehicle" && <VehicleDocsForm token={token} onDone={done} />}
+      {group === "contact" && <ContactForm token={token} driver={driver} onDone={done} />}
     </div>
   );
 }
